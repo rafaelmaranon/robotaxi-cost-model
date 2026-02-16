@@ -132,7 +132,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-white p-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
-          Robotaxi Unit Economics Simulator
+          Robotaxi Unit Economics Simulator 
         </h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
