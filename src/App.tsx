@@ -467,8 +467,8 @@ const App: React.FC = () => {
           {/* Right Panel - KPIs and Chart */}
           <div className="lg:col-span-2 flex flex-col lg:h-full overflow-visible lg:overflow-hidden">
             {/* KPIs */}
-            <div className="flex flex-wrap gap-4 items-center justify-between">
-              <div className="flex items-center space-x-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:flex sm:items-center sm:space-x-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">
                     ${isFinite(currentMetrics.totalCostPerMile) ? currentMetrics.totalCostPerMile.toFixed(2) : '∞'}
@@ -493,7 +493,7 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="w-full sm:w-auto">
                 <span className={`px-3 py-1 rounded text-white text-sm font-medium ${
                   currentMetrics.marginPerMile < 0 ? 'bg-red-500' : 
                   currentMetrics.marginPerMile <= 0.25 ? 'bg-yellow-500' : 'bg-green-500'
@@ -505,13 +505,13 @@ const App: React.FC = () => {
             </div>
 
             {/* Chart */}
-            <div className="flex-1 min-h-0">
-              <div className="flex justify-between items-center mb-2">
+            <div className="h-[320px] sm:h-[380px] lg:flex-1 lg:min-h-0">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-2">
                 <h3 className="text-lg font-semibold text-gray-800">Cost Analysis</h3>
                 <select
                   value={xAxisVariable}
                   onChange={(e) => setXAxisVariable(e.target.value as XAxisVariable)}
-                  className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="w-full sm:w-auto px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
                   <option value="utilization">Utilization (%)</option>
                   <option value="deadhead">Deadhead (%)</option>
