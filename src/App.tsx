@@ -225,6 +225,7 @@ const App: React.FC = () => {
             utilizationPercent: inputs.utilizationPercent,
             totalCostPerMile: currentMetrics.totalCostPerMile,
             marginPerMile: currentMetrics.marginPerMile,
+            breakEvenUtilizationPercent: breakEvenUtilizationPercent,
             status: currentMetrics.marginPerMile < 0 ? 'Losing' : 
                     currentMetrics.marginPerMile <= 0.25 ? 'Break-even' : 'Profitable'
           }
@@ -257,9 +258,6 @@ const App: React.FC = () => {
             </h1>
             <p className="text-gray-600 text-sm mb-1" style={{ opacity: 0.7 }}>
               Unit economics simulator for robotaxi fleets
-            </p>
-            <p className="text-gray-500 text-xs">
-              Adjust parameters → see cost/mile + margin/mile → use Presets to compare scenarios.
             </p>
           </div>
           
@@ -296,7 +294,7 @@ const App: React.FC = () => {
           <div className="lg:col-span-1 overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Parameters</h2>
             
-            <div className="space-y-4 pb-4">
+            <div className="space-y-6 pb-4">
               {/* Fleet Size */}
               <div>
                 <div className="flex justify-between items-center mb-1">
@@ -317,144 +315,156 @@ const App: React.FC = () => {
                 />
               </div>
 
-              {/* Utilization */}
+              {/* Demand & Utilization */}
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700">Utilization</label>
-                  <span className="text-sm font-semibold text-blue-600">{inputs.utilizationPercent}%</span>
+                <h3 className="text-sm font-semibold text-gray-800 mb-3">Demand & Utilization</h3>
+                <div className="space-y-4">
+                  {/* Utilization */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-medium text-gray-700">Utilization</label>
+                      <span className="text-sm font-semibold text-blue-600">{inputs.utilizationPercent}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="90"
+                      step="1"
+                      value={inputs.utilizationPercent}
+                      onChange={(e) => handleInputChange('utilizationPercent', Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.utilizationPercent - 10) / (90 - 10)) * 100}%, #e5e7eb ${((inputs.utilizationPercent - 10) / (90 - 10)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
+
+                  {/* Deadhead */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-medium text-gray-700">Deadhead</label>
+                      <span className="text-sm font-semibold text-blue-600">{inputs.deadheadPercent}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="70"
+                      step="1"
+                      value={inputs.deadheadPercent}
+                      onChange={(e) => handleInputChange('deadheadPercent', Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.deadheadPercent - 10) / (70 - 10)) * 100}%, #e5e7eb ${((inputs.deadheadPercent - 10) / (70 - 10)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
+
+                  {/* Ops Hours per Day */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-medium text-gray-700">Ops Hours / Day</label>
+                      <span className="text-sm font-semibold text-blue-600">{inputs.opsHoursPerDay}h</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="8"
+                      max="24"
+                      step="1"
+                      value={inputs.opsHoursPerDay}
+                      onChange={(e) => handleInputChange('opsHoursPerDay', Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.opsHoursPerDay - 8) / (24 - 8)) * 100}%, #e5e7eb ${((inputs.opsHoursPerDay - 8) / (24 - 8)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="90"
-                  step="1"
-                  value={inputs.utilizationPercent}
-                  onChange={(e) => handleInputChange('utilizationPercent', Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.utilizationPercent - 10) / (90 - 10)) * 100}%, #e5e7eb ${((inputs.utilizationPercent - 10) / (90 - 10)) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
               </div>
 
-              {/* Vehicles per Operator */}
+              {/* Cost Structure */}
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700">Vehicles per Operator</label>
-                  <span className="text-sm font-semibold text-blue-600">{inputs.vehiclesPerOperator}</span>
-                </div>
-                <input
-                  type="range"
-                  min="2"
-                  max="60"
-                  step="1"
-                  value={inputs.vehiclesPerOperator}
-                  onChange={(e) => handleInputChange('vehiclesPerOperator', Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.vehiclesPerOperator - 2) / (60 - 2)) * 100}%, #e5e7eb ${((inputs.vehiclesPerOperator - 2) / (60 - 2)) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-              </div>
+                <h3 className="text-sm font-semibold text-gray-800 mb-3">Cost Structure</h3>
+                <div className="space-y-4">
+                  {/* Vehicle Cost */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-medium text-gray-700">Vehicle Cost</label>
+                      <span className="text-sm font-semibold text-blue-600">${(inputs.vehicleCost / 1000).toFixed(0)}k</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="50000"
+                      max="300000"
+                      step="5000"
+                      value={inputs.vehicleCost}
+                      onChange={(e) => handleInputChange('vehicleCost', Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.vehicleCost - 50000) / (300000 - 50000)) * 100}%, #e5e7eb ${((inputs.vehicleCost - 50000) / (300000 - 50000)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
 
-              {/* Vehicle Cost */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700">Vehicle Cost</label>
-                  <span className="text-sm font-semibold text-blue-600">${(inputs.vehicleCost / 1000).toFixed(0)}k</span>
-                </div>
-                <input
-                  type="range"
-                  min="50000"
-                  max="300000"
-                  step="5000"
-                  value={inputs.vehicleCost}
-                  onChange={(e) => handleInputChange('vehicleCost', Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.vehicleCost - 50000) / (300000 - 50000)) * 100}%, #e5e7eb ${((inputs.vehicleCost - 50000) / (300000 - 50000)) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-              </div>
+                  {/* Vehicles per Operator */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-medium text-gray-700">Vehicles per Operator</label>
+                      <span className="text-sm font-semibold text-blue-600">{inputs.vehiclesPerOperator}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="2"
+                      max="60"
+                      step="1"
+                      value={inputs.vehiclesPerOperator}
+                      onChange={(e) => handleInputChange('vehiclesPerOperator', Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.vehiclesPerOperator - 2) / (60 - 2)) * 100}%, #e5e7eb ${((inputs.vehiclesPerOperator - 2) / (60 - 2)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
 
-              {/* Ops Hours per Day */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700">Ops Hours / Day</label>
-                  <span className="text-sm font-semibold text-blue-600">{inputs.opsHoursPerDay}h</span>
-                </div>
-                <input
-                  type="range"
-                  min="8"
-                  max="24"
-                  step="1"
-                  value={inputs.opsHoursPerDay}
-                  onChange={(e) => handleInputChange('opsHoursPerDay', Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.opsHoursPerDay - 8) / (24 - 8)) * 100}%, #e5e7eb ${((inputs.opsHoursPerDay - 8) / (24 - 8)) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-              </div>
+                  {/* Variable Cost per Mile */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-medium text-gray-700">Variable Cost / Mile</label>
+                      <span className="text-sm font-semibold text-blue-600">${inputs.variableCostPerMile.toFixed(2)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.20"
+                      max="2.00"
+                      step="0.05"
+                      value={inputs.variableCostPerMile}
+                      onChange={(e) => handleInputChange('variableCostPerMile', Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.variableCostPerMile - 0.20) / (2.00 - 0.20)) * 100}%, #e5e7eb ${((inputs.variableCostPerMile - 0.20) / (2.00 - 0.20)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
 
-              {/* Deadhead */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700">Deadhead</label>
-                  <span className="text-sm font-semibold text-blue-600">{inputs.deadheadPercent}%</span>
+                  {/* Revenue per Mile */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-medium text-gray-700">Revenue / Mile</label>
+                      <span className="text-sm font-semibold text-blue-600">${inputs.revenuePerMile.toFixed(2)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1.00"
+                      max="5.00"
+                      step="0.10"
+                      value={inputs.revenuePerMile}
+                      onChange={(e) => handleInputChange('revenuePerMile', Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.revenuePerMile - 1.00) / (5.00 - 1.00)) * 100}%, #e5e7eb ${((inputs.revenuePerMile - 1.00) / (5.00 - 1.00)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="70"
-                  step="1"
-                  value={inputs.deadheadPercent}
-                  onChange={(e) => handleInputChange('deadheadPercent', Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.deadheadPercent - 10) / (70 - 10)) * 100}%, #e5e7eb ${((inputs.deadheadPercent - 10) / (70 - 10)) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-              </div>
-
-              {/* Variable Cost per Mile */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700">Variable Cost / Mile</label>
-                  <span className="text-sm font-semibold text-blue-600">${inputs.variableCostPerMile.toFixed(2)}</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.20"
-                  max="2.00"
-                  step="0.05"
-                  value={inputs.variableCostPerMile}
-                  onChange={(e) => handleInputChange('variableCostPerMile', Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.variableCostPerMile - 0.20) / (2.00 - 0.20)) * 100}%, #e5e7eb ${((inputs.variableCostPerMile - 0.20) / (2.00 - 0.20)) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-              </div>
-
-              {/* Revenue per Mile */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700">Revenue / Mile</label>
-                  <span className="text-sm font-semibold text-blue-600">${inputs.revenuePerMile.toFixed(2)}</span>
-                </div>
-                <input
-                  type="range"
-                  min="1.00"
-                  max="5.00"
-                  step="0.10"
-                  value={inputs.revenuePerMile}
-                  onChange={(e) => handleInputChange('revenuePerMile', Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.revenuePerMile - 1.00) / (5.00 - 1.00)) * 100}%, #e5e7eb ${((inputs.revenuePerMile - 1.00) / (5.00 - 1.00)) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
               </div>
 
               {/* X Axis Variable Dropdown */}
@@ -480,27 +490,27 @@ const App: React.FC = () => {
             {/* KPIs */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6">
-                <div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide">COST / MILE</div>
+                <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">
                     ${isFinite(currentMetrics.totalCostPerMile) ? currentMetrics.totalCostPerMile.toFixed(2) : '∞'}
                   </div>
+                  <div className="text-xs text-gray-500 mt-1">Cost / mile</div>
                 </div>
                 
-                <div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide">MARGIN / MILE</div>
+                <div className="text-center">
                   <div className={`text-2xl font-bold ${
                     currentMetrics.marginPerMile < 0 ? 'text-red-600' : 'text-gray-900'
                   }`}>
                     ${isFinite(currentMetrics.marginPerMile) ? currentMetrics.marginPerMile.toFixed(2) : '-∞'}
                   </div>
+                  <div className="text-xs text-gray-500 mt-1">Margin / mile</div>
                 </div>
 
-                <div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide">BREAK-EVEN UTILIZATION</div>
+                <div className="text-center" title="Minimum utilization required for margin per mile to reach $0, holding all other parameters constant.">
                   <div className="text-2xl font-bold text-gray-900">
                     {breakEvenUtilizationPercent !== null ? `${breakEvenUtilizationPercent.toFixed(1)}%` : 'n/a'}
                   </div>
+                  <div className="text-xs text-gray-500 mt-1">Break-even utilization</div>
                 </div>
               </div>
 
@@ -509,8 +519,8 @@ const App: React.FC = () => {
                   currentMetrics.marginPerMile < 0 ? 'bg-red-500' : 
                   currentMetrics.marginPerMile <= 0.25 ? 'bg-yellow-500' : 'bg-green-500'
                 }`}>
-                  {currentMetrics.marginPerMile < 0 ? 'Losing' : 
-                   currentMetrics.marginPerMile <= 0.25 ? 'Break-even' : 'Profitable'}
+                  {currentMetrics.marginPerMile < 0 ? 'Status: Losing' : 
+                   currentMetrics.marginPerMile <= 0.25 ? 'Status: Break-even' : 'Status: Profitable'}
                 </span>
               </div>
             </div>
@@ -608,12 +618,39 @@ const App: React.FC = () => {
 
             {/* Chat UI */}
             <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col h-64">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Ask AI</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Insights</h3>
+              
+              <div className="flex flex-wrap gap-2 mb-3">
+                <button
+                  onClick={() => setUserMessage("Why am I losing money?")}
+                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200"
+                >
+                  Why am I losing money?
+                </button>
+                <button
+                  onClick={() => setUserMessage("How can I reach break-even?")}
+                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200"
+                >
+                  How can I reach break-even?
+                </button>
+                <button
+                  onClick={() => setUserMessage("What matters most right now?")}
+                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200"
+                >
+                  What matters most right now?
+                </button>
+              </div>
               
               <div className="space-y-2 mb-3">
                 <textarea
                   value={userMessage}
                   onChange={(e) => setUserMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleAskAI()
+                    }
+                  }}
                   placeholder="Ask about your robotaxi economics..."
                   className="w-full p-2 border border-gray-300 rounded-md resize-none h-16"
                   disabled={loading}
@@ -644,7 +681,7 @@ const App: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Disclaimer</h3>
               <p className="text-sm text-gray-700 mb-4">
                 This is an independent, educational simulator based on public information and user-provided assumptions. 
-                It is not affiliated with Waymo, Zoox, or any company. It contains no proprietary/confidential data. 
+                It is not affiliated with Waymo, Zoox, Tesla, or any company. It contains no proprietary/confidential data. 
                 Outputs are illustrative and not financial advice.
               </p>
               <button
