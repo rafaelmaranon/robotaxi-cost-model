@@ -76,7 +76,7 @@ async function logChatEvent(
     });
 
   if (error) {
-    console.error('Failed to log chat event:', error);
+    console.error('supabase insert', error);
   }
 }
 
@@ -112,18 +112,18 @@ Answer questions about this simulation state. Provide insights about the economi
 
     return completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response. Please try again.';
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('openai error', error);
     return 'I apologize, but I encountered an error while processing your request. Please try again.';
   }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
   try {
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     const { sessionId, userMessage, simState }: ChatRequest = req.body;
 
     // Validate required fields
@@ -150,8 +150,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json(response);
 
-  } catch (error) {
-    console.error('Chat API error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+  } catch (err: any) {
+    console.error('api/chat error', err);
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      detail: err?.message ?? String(err) 
+    });
   }
 }
