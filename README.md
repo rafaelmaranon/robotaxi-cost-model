@@ -1,17 +1,52 @@
 # Robotaxi Cost Model
 
-Independent unit economics simulator for robotaxi fleets (Waymo / Zoox / Tesla style models using public assumptions).
+Interactive unit economics simulator for autonomous ride-hailing fleets.
 
-**Version 1.0.0** - A React + TypeScript + Tailwind + Recharts single-page application for simulating robotaxi unit economics and analyzing cost structures.
+Built to explore how utilization, deadhead, vehicle cost, and operations scale impact robotaxi profitability.
 
-🌐 **Live Demo**: https://robotaxi-cost-model.vercel.app/
+🌐 Live Demo: https://robotaxi-cost-model.vercel.app/
 
-## Features
+---
 
-- **Interactive Parameters**: Adjust fleet size, utilization, vehicle costs, and operational parameters
-- **Real-time Calculations**: Live updates of cost per mile and margin calculations
-- **Dynamic Charts**: Visualize how different variables affect total cost per mile
-- **Economic Model**: Based on realistic robotaxi operational assumptions
+### Why this exists
+
+Robotaxi economics hinge on a small number of operational levers:
+
+- Utilization
+- Deadhead
+- Fleet scale
+- Ops efficiency
+- Vehicle CAPEX
+
+This tool lets you experiment with those variables in real time and see their effect on:
+
+- Cost per mile  
+- Margin per mile  
+- Break-even utilization  
+
+Designed as a lightweight product + systems thinking demo.
+
+---
+
+### Key Features
+
+- Interactive fleet + operations controls  
+- Real-time cost & margin computation  
+- Break-even utilization indicator  
+- Preset scenarios (early launch / scaling city / mature market)  
+- AI assistant for scenario analysis  
+- Dynamic cost curves (Recharts)
+
+---
+
+### Disclaimer
+
+This simulator uses simplified public assumptions for educational purposes.
+
+Not affiliated with Waymo, Zoox, Tesla, or any operator.  
+No proprietary data used.
+
+---
 
 ## Economic Model
 
@@ -95,7 +130,7 @@ Chat endpoint for AI-powered analysis of simulation states.
 
 **Features:**
 - Rate limiting: 30 messages per day per session
-- OpenAI GPT-4o-mini integration
+- OpenAI gpt-4.1-mini integration
 - Supabase logging and storage
 - Real-time simulation state analysis
 
@@ -129,7 +164,7 @@ Chat endpoint for AI-powered analysis of simulation states.
 
 **Environment Variables Required:**
 - `SUPABASE_URL` - Your Supabase project URL
-- `SUPABASE_ANON_KEY` - Your Supabase anonymous key
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (server only)
 - `OPENAI_API_KEY` - Your OpenAI API key
 
 ## Version History
