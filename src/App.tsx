@@ -248,10 +248,10 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="h-screen bg-white p-4 overflow-hidden">
+    <div className="min-h-screen lg:h-screen bg-white p-4 overflow-visible lg:overflow-hidden">
       <div className="max-w-6xl mx-auto h-full flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">
               Robotaxi Cost Model
@@ -261,7 +261,7 @@ const App: React.FC = () => {
             </p>
           </div>
           
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
             <select
               onChange={(e) => handlePresetSelect(e.target.value)}
               className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -289,9 +289,9 @@ const App: React.FC = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6 flex-1 overflow-visible lg:overflow-hidden">
           {/* Left Panel - Inputs */}
-          <div className="lg:col-span-1 overflow-y-auto">
+          <div className="lg:col-span-1 lg:overflow-y-auto lg:min-h-0">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Parameters</h2>
             
             <div className="space-y-8 pb-4">
@@ -465,9 +465,9 @@ const App: React.FC = () => {
           </div>
 
           {/* Right Panel - KPIs and Chart */}
-          <div className="lg:col-span-2 flex flex-col h-full overflow-hidden">
+          <div className="lg:col-span-2 flex flex-col lg:h-full overflow-visible lg:overflow-hidden">
             {/* KPIs */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap gap-4 items-center justify-between">
               <div className="flex items-center space-x-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">
@@ -608,7 +608,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Chat UI */}
-            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col min-h-[300px] shrink-0">
+            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col h-auto lg:min-h-[300px] shrink-0">
               <h3 className="text-lg font-semibold text-gray-800 mb-3">Insights</h3>
               
               <div className="flex flex-wrap gap-2 mb-3">
@@ -657,7 +657,7 @@ const App: React.FC = () => {
               </div>
 
               {aiReply && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex-1 overflow-y-auto min-h-[120px]">
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex-1 overflow-y-auto max-h-[40vh] lg:max-h-[220px] min-h-[120px]">
                   <div className="text-sm whitespace-pre-wrap">{aiReply}</div>
                 </div>
               )}
