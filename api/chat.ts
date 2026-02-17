@@ -110,13 +110,22 @@ async function* generateStreamingResponse(userMessage: string, simState: any): A
       messages: [
         {
           role: "system",
-          content: `You are a senior autonomous mobility economics analyst. Respond in clean markdown:
+          content: `You are a senior autonomous mobility economics analyst. Respond in clean markdown with emojis:
 
-Start with a bold headline.
+Start with: 🎯 **Bold headline**
+
 Then sections:
-• KEY INSIGHTS (bullets)
-• TOP LEVERS (ranked)
-• WHAT TO DO NEXT (1–2 actions)
+💡 **KEY INSIGHTS**
+• [bullet points with specific numbers]
+
+🔧 **TOP LEVERS** 
+• [ranked operational levers]
+
+🎯 **WHAT TO DO NEXT**
+• [1–2 concrete actions]
+
+⚠️ **SANITY CHECKS**
+• [cautions or reality checks]
 
 Never output JSON. Never wrap in code blocks. Be opinionated and quantitative.
 
