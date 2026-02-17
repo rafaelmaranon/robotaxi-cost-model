@@ -232,18 +232,76 @@ const App: React.FC = () => {
         }),
       })
 
-      const data = await response.json()
-      
-      if (response.ok) {
-        setAiReply(data.reply)
-      } else {
-        setAiReply(`Error: ${data.error}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        setAiReply(`Error: ${errorData.error}`)
+        return
       }
+
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let fullResponse = ''
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          const chunk = decoder.decode(value, { stream: true })
+          fullResponse += chunk
+          setAiReply(fullResponse)
+        }
+      }
+
+      // Try to parse as structured JSON and render nicely
+      try {
+        const structuredData = JSON.parse(fullResponse)
+        if (structuredData.headline && structuredData.insights) {
+          setAiReply(renderStructuredResponse(structuredData))
+        }
+      } catch {
+        // Keep as plain text if not valid JSON
+      }
+
     } catch (error) {
       setAiReply('Network error occurred')
     } finally {
       setLoading(false)
     }
+  }
+
+  const renderStructuredResponse = (data: any) => {
+    let formatted = `**${data.headline}**\n\n`
+    
+    if (data.insights?.length) {
+      formatted += '**Key Insights:**\n'
+      data.insights.forEach((insight: string) => {
+        formatted += `• ${insight}\n`
+      })
+      formatted += '\n'
+    }
+    
+    if (data.top_levers?.length) {
+      formatted += '**Top Levers:**\n'
+      data.top_levers.forEach((lever: any) => {
+        formatted += `• **${lever.lever}** (${lever.direction}): ${lever.why}\n`
+      })
+      formatted += '\n'
+    }
+    
+    if (data.recommended_next_change) {
+      formatted += `**Next Step:** ${data.recommended_next_change}\n\n`
+    }
+    
+    if (data.sanity_checks?.length) {
+      formatted += '**Sanity Checks:**\n'
+      data.sanity_checks.forEach((check: string) => {
+        formatted += `⚠️ ${check}\n`
+      })
+    }
+    
+    return formatted
   }
 
 

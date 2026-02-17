@@ -45,6 +45,18 @@ interface ChatResponse {
   error?: string;
 }
 
+interface StructuredResponse {
+  headline: string;
+  insights: string[];
+  top_levers: Array<{
+    lever: string;
+    direction: string;
+    why: string;
+  }>;
+  recommended_next_change: string;
+  sanity_checks: string[];
+}
+
 // Rate limiting: 30 messages per day per sessionId
 async function checkRateLimit(sessionId: string): Promise<boolean> {
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
@@ -90,31 +102,96 @@ async function logChatEvent(
 const fmt = (v: any, digits = 2) =>
   typeof v === "number" && Number.isFinite(v) ? v.toFixed(digits) : "n/a";
 
-// Generate OpenAI response
-async function generateResponse(userMessage: string, simState: any): Promise<string> {
+// Generate OpenAI response with streaming
+async function* generateStreamingResponse(userMessage: string, simState: any): AsyncGenerator<string, void, unknown> {
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4.1-mini',
+    const stream = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: "system",
-          content:
-            "You are an assistant embedded in a robotaxi unit economics simulator. You MUST use ONLY the provided simState JSON. If a required value is missing, you MUST output exactly: 'missing: <field1>, <field2>, ...' and STOP (do not give generic advice). Otherwise respond in 3-6 bullet points, each bullet must cite at least one simState field name (e.g., utilizationPercent, deadheadPercent). Keep it concise."
+          content: `You are an expert robotaxi economics consultant. Be opinionated and specific. Use the current simState numbers in every insight. Always mention utilization, deadhead, and CAPEX amortization if they're major drivers. Give 1-2 quantified 'if you change X by Y, margin moves ~Z' sensitivity statements. End with one actionable next step.
+
+Current state: Fleet=${simState.fleetSize}, Utilization=${simState.utilizationPercent}%, Deadhead=${simState.deadheadPercent}%, Cost/mile=$${fmt(simState.totalCostPerMile)}, Margin/mile=$${fmt(simState.marginPerMile)}, Vehicle cost=$${fmt(simState.vehicleCost/1000)}k, Revenue/mile=$${fmt(simState.revenuePerMile)}.`
         },
         {
           role: "user",
-          content:
-            `USER_QUESTION: ${userMessage}\n\nSIM_STATE_JSON:\n${JSON.stringify(simState ?? {}, null, 2)}` 
+          content: `USER_QUESTION: ${userMessage}\n\nSIM_STATE_JSON:\n${JSON.stringify(simState ?? {}, null, 2)}`
         }
       ],
-      max_tokens: 220,
-      temperature: 0.2,
+      max_tokens: 300,
+      temperature: 0.3,
+      stream: true,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "robotaxi_analysis",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              headline: {
+                type: "string",
+                description: "Short headline summarizing the key issue or opportunity"
+              },
+              insights: {
+                type: "array",
+                items: {
+                  type: "string"
+                },
+                description: "3-5 bullet insights citing specific simState numbers"
+              },
+              top_levers: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    lever: { type: "string" },
+                    direction: { type: "string" },
+                    why: { type: "string" }
+                  },
+                  required: ["lever", "direction", "why"],
+                  additionalProperties: false
+                },
+                description: "Top operational levers ranked by impact"
+              },
+              recommended_next_change: {
+                type: "string",
+                description: "One concrete actionable recommendation"
+              },
+              sanity_checks: {
+                type: "array",
+                items: {
+                  type: "string"
+                },
+                description: "1-2 cautions or reality checks"
+              }
+            },
+            required: ["headline", "insights", "top_levers", "recommended_next_change", "sanity_checks"],
+            additionalProperties: false
+          }
+        }
+      }
     });
 
-    return completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response. Please try again.';
+    let fullContent = '';
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || '';
+      if (content) {
+        fullContent += content;
+        yield content;
+      }
+    }
+
   } catch (error) {
     console.error('openai error', error);
-    return 'I apologize, but I encountered an error while processing your request. Please try again.';
+    yield JSON.stringify({
+      headline: "Error occurred",
+      insights: ["I encountered an error while processing your request. Please try again."],
+      top_levers: [],
+      recommended_next_change: "Please retry your question.",
+      sanity_checks: ["Technical error - please try again."]
+    });
   }
 }
 
@@ -123,6 +200,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
 
   // Handle OPTIONS preflight request
   if (req.method === "OPTIONS") {
@@ -177,18 +257,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(429).json({ error: 'Rate limit exceeded. Maximum 30 messages per day.' });
     }
 
-    // Generate AI response
-    const assistantMessage = await generateResponse(userMessage, simState);
-
-    // Log the chat event
-    await logChatEvent(sessionId, userMessage, assistantMessage, simState);
-
-    // Return response
-    const response: ChatResponse = {
-      reply: assistantMessage
-    };
-
-    return res.status(200).json(response);
+    // Stream AI response
+    let fullResponse = '';
+    
+    for await (const chunk of generateStreamingResponse(userMessage, simState)) {
+      fullResponse += chunk;
+      res.write(chunk);
+    }
+    
+    // Log the chat event with full response
+    await logChatEvent(sessionId, userMessage, fullResponse, simState);
+    
+    res.end();
 
   } catch (err: any) {
     console.error('api/chat error', err);
