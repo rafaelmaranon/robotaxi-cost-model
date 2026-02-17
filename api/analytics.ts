@@ -31,13 +31,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Debug logging for environment variables
+    console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+    console.log('SUPABASE_SERVICE_ROLE_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    
     const { sessionId, event, payload }: AnalyticsEvent = req.body;
 
     if (!sessionId || !event) {
       return res.status(400).json({ error: 'Missing required fields: sessionId, event' });
     }
 
-    // Log analytics event
+    // Log analytics event with detailed error handling
     const { error } = await supabase
       .from('analytics_events')
       .insert({
@@ -47,17 +51,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
     if (error) {
-      console.error('Analytics insert error:', error);
-      return res.status(500).json({ error: 'Failed to log analytics event' });
+      console.error('Supabase insert error:', error);
+      return res.status(500).json({ error });
     }
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ ok: true });
 
   } catch (err: any) {
-    console.error('Analytics API error:', err);
-    return res.status(500).json({ 
-      error: 'Internal server error', 
-      detail: err?.message ?? String(err) 
-    });
+    console.error('Analytics route crash:', err);
+    return res.status(500).json({ crash: String(err) });
   }
 }
