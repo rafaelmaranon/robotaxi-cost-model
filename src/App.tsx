@@ -14,6 +14,39 @@ interface SimulationInputs {
 
 type XAxisVariable = 'utilization' | 'deadhead' | 'vehiclesPerOperator'
 
+const PRESETS = {
+  'Early launch': {
+    fleetSize: 500,
+    vehiclesPerOperator: 3,
+    vehicleCost: 200000,
+    opsHoursPerDay: 16,
+    deadheadPercent: 60,
+    variableCostPerMile: 0.80,
+    revenuePerMile: 3.50,
+    utilizationPercent: 25,
+  },
+  'Scaling city': {
+    fleetSize: 2000,
+    vehiclesPerOperator: 5,
+    vehicleCost: 170000,
+    opsHoursPerDay: 20,
+    deadheadPercent: 44,
+    variableCostPerMile: 0.60,
+    revenuePerMile: 2.50,
+    utilizationPercent: 40,
+  },
+  'Mature city': {
+    fleetSize: 8000,
+    vehiclesPerOperator: 8,
+    vehicleCost: 150000,
+    opsHoursPerDay: 22,
+    deadheadPercent: 25,
+    variableCostPerMile: 0.45,
+    revenuePerMile: 2.20,
+    utilizationPercent: 65,
+  }
+}
+
 const App: React.FC = () => {
   const [inputs, setInputs] = useState<SimulationInputs>({
     fleetSize: 2000,
@@ -30,6 +63,7 @@ const App: React.FC = () => {
   const [userMessage, setUserMessage] = useState('')
   const [aiReply, setAiReply] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showDisclaimer, setShowDisclaimer] = useState(false)
 
   // Constants
   const operatorCostPerHour = 40
@@ -66,6 +100,31 @@ const App: React.FC = () => {
   }
 
   const currentMetrics = useMemo(() => calculateMetrics(inputs), [inputs])
+
+  // Calculate break-even utilization
+  const breakEvenUtilizationPercent = useMemo(() => {
+    const vehicleCostPerDay = inputs.vehicleCost / vehicleLifetimeDays
+    const teleopsAndOpsPerDay = (operatorCostPerHour * inputs.opsHoursPerDay) / inputs.vehiclesPerOperator
+    const fixedDailyCost = vehicleCostPerDay + teleopsAndOpsPerDay
+    
+    const deadheadDecimal = Math.min(inputs.deadheadPercent / 100, 0.95)
+    const paidMilesRatio = (1 - deadheadDecimal)
+    
+    // At break-even: marginPerMile = 0
+    // revenuePerMile - totalCostPerMile = 0
+    // revenuePerMile - (fixedDailyCost / paidMilesPerDay + variableCostPerMile) = 0
+    // revenuePerMile - (fixedDailyCost / (maxMilesPerDay * utilization * paidMilesRatio) + variableCostPerMile) = 0
+    // Solve for utilization:
+    // utilization = fixedDailyCost / (maxMilesPerDay * paidMilesRatio * (revenuePerMile - variableCostPerMile))
+    
+    const netRevenuePerMile = inputs.revenuePerMile - inputs.variableCostPerMile
+    if (netRevenuePerMile <= 0 || paidMilesRatio <= 0) return null
+    
+    const breakEvenUtilization = fixedDailyCost / (maxMilesPerDay * paidMilesRatio * netRevenuePerMile)
+    const breakEvenPercent = breakEvenUtilization * 100
+    
+    return (breakEvenPercent >= 0 && breakEvenPercent <= 100) ? breakEvenPercent : null
+  }, [inputs])
 
   // Generate chart data
   const chartData = useMemo(() => {
@@ -117,6 +176,16 @@ const App: React.FC = () => {
 
   const handleInputChange = (field: keyof SimulationInputs, value: number) => {
     setInputs(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handlePresetSelect = (presetName: string) => {
+    if (presetName && PRESETS[presetName as keyof typeof PRESETS]) {
+      setInputs(PRESETS[presetName as keyof typeof PRESETS])
+    }
+  }
+
+  const handleReset = () => {
+    setInputs(PRESETS['Scaling city']) // Reset to default preset
   }
 
   const getXAxisLabel = () => {
@@ -178,21 +247,56 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-white p-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Robotaxi Cost Model
-        </h1>
-        <p className="text-gray-600 mb-6" style={{ opacity: 0.7 }}>
-          Unit economics simulator for robotaxi fleets
-        </p>
+    <div className="h-screen bg-white p-4 overflow-hidden">
+      <div className="max-w-6xl mx-auto h-full flex flex-col">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              Robotaxi Cost Model
+            </h1>
+            <p className="text-gray-600 text-sm mb-1" style={{ opacity: 0.7 }}>
+              Unit economics simulator for robotaxi fleets
+            </p>
+            <p className="text-gray-500 text-xs">
+              Adjust parameters → see cost/mile + margin/mile → use Presets to compare scenarios.
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <select
+              onChange={(e) => handlePresetSelect(e.target.value)}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue=""
+            >
+              <option value="" disabled>Presets</option>
+              {Object.keys(PRESETS).map(preset => (
+                <option key={preset} value={preset}>{preset}</option>
+              ))}
+            </select>
+            
+            <button
+              onClick={handleReset}
+              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Reset
+            </button>
+            
+            <button
+              onClick={() => setShowDisclaimer(true)}
+              className="text-blue-600 hover:text-blue-800 text-sm focus:outline-none"
+            >
+              ⓘ Disclaimer
+            </button>
+          </div>
+        </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
           {/* Left Panel - Inputs */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Parameters</h2>
             
-            <div className="space-y-4">
+            <div className="space-y-4 pb-4">
               {/* Fleet Size */}
               <div>
                 <div className="flex justify-between items-center mb-1">
@@ -372,10 +476,10 @@ const App: React.FC = () => {
           </div>
 
           {/* Right Panel - KPIs and Chart */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 flex flex-col space-y-4 overflow-hidden">
             {/* KPIs */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-8">
+              <div className="flex items-center space-x-6">
                 <div>
                   <div className="text-xs text-gray-500 uppercase tracking-wide">COST / MILE</div>
                   <div className="text-2xl font-bold text-gray-900">
@@ -389,6 +493,13 @@ const App: React.FC = () => {
                     currentMetrics.marginPerMile < 0 ? 'text-red-600' : 'text-gray-900'
                   }`}>
                     ${isFinite(currentMetrics.marginPerMile) ? currentMetrics.marginPerMile.toFixed(2) : '-∞'}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wide">BREAK-EVEN UTILIZATION</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {breakEvenUtilizationPercent !== null ? `${breakEvenUtilizationPercent.toFixed(1)}%` : 'n/a'}
                   </div>
                 </div>
               </div>
@@ -405,8 +516,8 @@ const App: React.FC = () => {
             </div>
 
             {/* Chart */}
-            <div>
-              <div className="h-80">
+            <div className="flex-1 min-h-0">
+              <div className="h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
                     <CartesianGrid strokeDasharray="2 2" stroke="#f0f0f0" />
@@ -449,6 +560,16 @@ const App: React.FC = () => {
                       label={{ value: "Healthy $1.50", position: "top", style: { fontSize: '10px', fill: '#51cf66' } }} 
                     />
                     
+                    {/* Break-even Utilization Line (only when X-axis is Utilization) */}
+                    {xAxisVariable === 'utilization' && breakEvenUtilizationPercent !== null && (
+                      <ReferenceLine 
+                        x={breakEvenUtilizationPercent} 
+                        stroke="#9333ea" 
+                        strokeDasharray="3 3" 
+                        label={{ value: "Break-even", position: "top", style: { fontSize: '10px', fill: '#9333ea' } }} 
+                      />
+                    )}
+                    
                     {/* Main Line */}
                     <Line 
                       type="monotone" 
@@ -486,15 +607,15 @@ const App: React.FC = () => {
             </div>
 
             {/* Chat UI */}
-            <div className="bg-white rounded-lg shadow-lg p-4 space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800">Ask AI</h3>
+            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col h-64">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Ask AI</h3>
               
-              <div className="space-y-2">
+              <div className="space-y-2 mb-3">
                 <textarea
                   value={userMessage}
                   onChange={(e) => setUserMessage(e.target.value)}
                   placeholder="Ask about your robotaxi economics..."
-                  className="w-full p-2 border border-gray-300 rounded-md resize-none h-20"
+                  className="w-full p-2 border border-gray-300 rounded-md resize-none h-16"
                   disabled={loading}
                 />
                 
@@ -508,13 +629,33 @@ const App: React.FC = () => {
               </div>
 
               {aiReply && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex-1 overflow-y-auto">
                   <div className="text-sm whitespace-pre-wrap">{aiReply}</div>
                 </div>
               )}
             </div>
           </div>
         </div>
+
+        {/* Disclaimer Modal */}
+        {showDisclaimer && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Disclaimer</h3>
+              <p className="text-sm text-gray-700 mb-4">
+                This is an independent, educational simulator based on public information and user-provided assumptions. 
+                It is not affiliated with Waymo, Zoox, or any company. It contains no proprietary/confidential data. 
+                Outputs are illustrative and not financial advice.
+              </p>
+              <button
+                onClick={() => setShowDisclaimer(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
