@@ -64,6 +64,15 @@ const App: React.FC = () => {
   const [aiReply, setAiReply] = useState('')
   const [loading, setLoading] = useState(false)
   const [showDisclaimer, setShowDisclaimer] = useState(false)
+  const [sessionId] = useState(() => {
+    // Generate unique sessionId per browser session
+    const stored = localStorage.getItem('robotaxi-session-id')
+    if (stored) return stored
+    
+    const newId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36)
+    localStorage.setItem('robotaxi-session-id', newId)
+    return newId
+  })
 
   // Constants
   const operatorCostPerHour = 40
@@ -212,7 +221,7 @@ const App: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sessionId: 'demo',
+          sessionId: sessionId,
           userMessage,
           simState: {
             fleetSize: inputs.fleetSize,
