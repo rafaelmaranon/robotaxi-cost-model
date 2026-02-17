@@ -378,7 +378,7 @@ const App: React.FC = () => {
         
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6 flex-1 overflow-visible lg:overflow-hidden">
           {/* Left Panel - Inputs */}
-          <div className="lg:col-span-1 lg:overflow-y-auto lg:min-h-0">
+          <div className="order-4 lg:order-1 lg:col-span-1 lg:overflow-y-auto lg:min-h-0">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Parameters</h2>
             
             <div className="space-y-8 pb-4">
@@ -552,7 +552,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Right Panel - KPIs and Chart */}
-          <div className="lg:col-span-2 flex flex-col lg:h-full overflow-visible lg:overflow-hidden">
+          <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col lg:h-full overflow-visible lg:overflow-hidden">
             {/* KPIs */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:flex sm:items-center sm:space-x-6">
