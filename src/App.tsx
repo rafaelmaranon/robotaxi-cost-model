@@ -608,7 +608,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Chat UI */}
-            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col h-64 shrink-0">
+            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col min-h-[300px] shrink-0">
               <h3 className="text-lg font-semibold text-gray-800 mb-3">Insights</h3>
               
               <div className="flex flex-wrap gap-2 mb-3">
@@ -657,7 +657,7 @@ const App: React.FC = () => {
               </div>
 
               {aiReply && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex-1 overflow-y-auto max-h-[220px]">
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex-1 overflow-y-auto min-h-[120px]">
                   <div className="text-sm whitespace-pre-wrap">{aiReply}</div>
                 </div>
               )}
