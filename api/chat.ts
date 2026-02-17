@@ -2,6 +2,12 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 
+console.log("env check", {
+  hasSupabaseUrl: !!process.env.SUPABASE_URL,
+  hasServiceRole: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  hasOpenAI: !!process.env.OPENAI_API_KEY,
+});
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
