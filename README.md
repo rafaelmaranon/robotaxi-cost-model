@@ -1,6 +1,8 @@
 # Robotaxi Unit Economics Simulator
 
-A React + TypeScript + Tailwind + Recharts single-page application for simulating robotaxi unit economics and analyzing cost structures.
+**Version 1.0.0** - A React + TypeScript + Tailwind + Recharts single-page application for simulating robotaxi unit economics and analyzing cost structures.
+
+🌐 **Live Demo**: https://rafaelmaranon.github.io/Waymo-cost-model/
 
 ## Features
 
@@ -82,6 +84,66 @@ npm run build
 - **Tailwind CSS** - Styling
 - **Recharts** - Data visualization
 - **Vite** - Build tool
+
+## API Endpoints
+
+### POST /api/chat
+
+Chat endpoint for AI-powered analysis of simulation states.
+
+**Features:**
+- Rate limiting: 30 messages per day per session
+- OpenAI GPT-4o-mini integration
+- Supabase logging and storage
+- Real-time simulation state analysis
+
+**Request:**
+```json
+{
+  "sessionId": "unique-session-identifier",
+  "userMessage": "Why is my cost per mile so high?",
+  "simState": {
+    "fleetSize": 2000,
+    "vehiclesPerOperator": 5,
+    "vehicleCost": 170000,
+    "opsHoursPerDay": 20,
+    "deadheadPercent": 44,
+    "variableCostPerMile": 0.60,
+    "revenuePerMile": 2.50,
+    "utilizationPercent": 40,
+    "totalCostPerMile": 4.37,
+    "marginPerMile": -1.87,
+    "status": "Losing"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "reply": "Your cost per mile is high primarily due to low utilization (40%) and high deadhead percentage (44%). Consider increasing utilization or reducing deadhead miles to improve economics."
+}
+```
+
+**Environment Variables Required:**
+- `SUPABASE_URL` - Your Supabase project URL
+- `SUPABASE_ANON_KEY` - Your Supabase anonymous key
+- `OPENAI_API_KEY` - Your OpenAI API key
+
+## Version History
+
+### V1.0.0 (Current)
+- ✅ Complete interactive parameter controls (8 sliders)
+- ✅ Real-time economic calculations and KPIs
+- ✅ Dynamic charts with reference lines and current point indicators
+- ✅ Responsive design matching reference layout
+- ✅ GitHub Pages deployment with proper asset paths
+- ✅ Full documentation and deployment guide
+
+**Branches:**
+- `main` - Current development (V1.0.0)
+- `v1.0.0-stable` - Stable V1.0.0 for preservation
+- `v1.0.0` tag - Release tag for V1.0.0
 
 ## License
 
