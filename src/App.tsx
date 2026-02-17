@@ -250,11 +250,27 @@ const App: React.FC = () => {
           
           const chunk = decoder.decode(value, { stream: true })
           fullResponse += chunk
-          setAiReply(fullResponse)
+          
+          // Try to parse and format on each chunk
+          try {
+            const structuredData = JSON.parse(fullResponse)
+            if (structuredData.headline && structuredData.insights) {
+              setAiReply(renderStructuredResponse(structuredData))
+            } else {
+              setAiReply(fullResponse) // Show raw during streaming
+            }
+          } catch {
+            // Show a cleaner loading state during streaming
+            if (fullResponse.trim().startsWith('{')) {
+              setAiReply('📊 Analyzing your robotaxi economics...')
+            } else {
+              setAiReply(fullResponse)
+            }
+          }
         }
       }
 
-      // Try to parse as structured JSON and render nicely
+      // Final parse attempt
       try {
         const structuredData = JSON.parse(fullResponse)
         if (structuredData.headline && structuredData.insights) {
@@ -272,32 +288,32 @@ const App: React.FC = () => {
   }
 
   const renderStructuredResponse = (data: any) => {
-    let formatted = `**${data.headline}**\n\n`
+    let formatted = `🎯 ${data.headline}\n\n`
     
     if (data.insights?.length) {
-      formatted += '**Key Insights:**\n'
+      formatted += '💡 KEY INSIGHTS:\n'
       data.insights.forEach((insight: string) => {
-        formatted += `• ${insight}\n`
+        formatted += `  • ${insight}\n`
       })
       formatted += '\n'
     }
     
     if (data.top_levers?.length) {
-      formatted += '**Top Levers:**\n'
+      formatted += '🔧 TOP LEVERS:\n'
       data.top_levers.forEach((lever: any) => {
-        formatted += `• **${lever.lever}** (${lever.direction}): ${lever.why}\n`
+        formatted += `  • ${lever.lever} (${lever.direction}): ${lever.why}\n`
       })
       formatted += '\n'
     }
     
     if (data.recommended_next_change) {
-      formatted += `**Next Step:** ${data.recommended_next_change}\n\n`
+      formatted += `🎯 NEXT STEP:\n  ${data.recommended_next_change}\n\n`
     }
     
     if (data.sanity_checks?.length) {
-      formatted += '**Sanity Checks:**\n'
+      formatted += '⚠️ SANITY CHECKS:\n'
       data.sanity_checks.forEach((check: string) => {
-        formatted += `⚠️ ${check}\n`
+        formatted += `  • ${check}\n`
       })
     }
     
