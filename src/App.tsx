@@ -242,6 +242,7 @@ const App: React.FC = () => {
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
       let fullResponse = ''
+      let hasShownLoading = false
 
       if (reader) {
         while (true) {
@@ -251,33 +252,39 @@ const App: React.FC = () => {
           const chunk = decoder.decode(value, { stream: true })
           fullResponse += chunk
           
-          // Try to parse and format on each chunk
-          try {
-            const structuredData = JSON.parse(fullResponse)
-            if (structuredData.headline && structuredData.insights) {
-              setAiReply(renderStructuredResponse(structuredData))
-            } else {
-              setAiReply(fullResponse) // Show raw during streaming
-            }
-          } catch {
-            // Show a cleaner loading state during streaming
-            if (fullResponse.trim().startsWith('{')) {
-              setAiReply('📊 Analyzing your robotaxi economics...')
-            } else {
-              setAiReply(fullResponse)
+          // Show loading state only once at the beginning
+          if (!hasShownLoading) {
+            setAiReply('📊 Analyzing your robotaxi economics...')
+            hasShownLoading = true
+          }
+          
+          // Try to parse and format only when we have complete JSON
+          if (fullResponse.includes('}')) {
+            try {
+              const structuredData = JSON.parse(fullResponse)
+              if (structuredData.headline && structuredData.insights) {
+                setAiReply(renderStructuredResponse(structuredData))
+                break // Stop updating once we have formatted response
+              }
+            } catch {
+              // Continue streaming until we get valid JSON
             }
           }
         }
       }
 
-      // Final parse attempt
-      try {
-        const structuredData = JSON.parse(fullResponse)
-        if (structuredData.headline && structuredData.insights) {
-          setAiReply(renderStructuredResponse(structuredData))
+      // Final parse attempt if not already formatted
+      if (!fullResponse.includes('🎯')) {
+        try {
+          const structuredData = JSON.parse(fullResponse)
+          if (structuredData.headline && structuredData.insights) {
+            setAiReply(renderStructuredResponse(structuredData))
+          } else {
+            setAiReply(fullResponse) // Fallback to raw text
+          }
+        } catch {
+          setAiReply(fullResponse) // Fallback to raw text
         }
-      } catch {
-        // Keep as plain text if not valid JSON
       }
 
     } catch (error) {
