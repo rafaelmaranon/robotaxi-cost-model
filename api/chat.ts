@@ -154,9 +154,14 @@ You must:
   - What becomes constrained
 • Provide one decisive recommendation. Not three. One.
 
+Hard constraints:
+• Break-even utilization must NEVER be listed as a lever
+• When margin < 0 and gap > 30 points: State explicitly "Incremental improvements are insufficient."
+• Marketing may only be suggested if: margin > 0 AND utilization is near break-even AND revenue per mile is stable
+• Lever types must be ONLY: Pricing, Fixed cost (vehicle/operator), Utilization, Deadhead, Variable cost
+
 Avoid:
 • Generic advice
-• Marketing as default solution
 • Fleet expansion without justification
 • Repeating numbers without interpretation
 
