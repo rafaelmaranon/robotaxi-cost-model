@@ -294,37 +294,38 @@ const App: React.FC = () => {
           <div className="lg:col-span-1 overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Parameters</h2>
             
-            <div className="space-y-6 pb-4">
-              {/* Fleet Size */}
+            <div className="space-y-8 pb-4">
+              {/* Fleet */}
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700">Fleet Size</label>
-                  <span className="text-sm font-semibold text-blue-600">{inputs.fleetSize.toLocaleString()}</span>
+                <h3 className="text-sm font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Fleet</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Fleet Size</label>
+                    <div className="text-xs text-gray-500 mb-2">{inputs.fleetSize.toLocaleString()}</div>
+                    <input
+                      type="range"
+                      min="500"
+                      max="10000"
+                      step="100"
+                      value={inputs.fleetSize}
+                      onChange={(e) => handleInputChange('fleetSize', Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.fleetSize - 500) / (10000 - 500)) * 100}%, #e5e7eb ${((inputs.fleetSize - 500) / (10000 - 500)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="500"
-                  max="10000"
-                  step="100"
-                  value={inputs.fleetSize}
-                  onChange={(e) => handleInputChange('fleetSize', Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.fleetSize - 500) / (10000 - 500)) * 100}%, #e5e7eb ${((inputs.fleetSize - 500) / (10000 - 500)) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
               </div>
 
               {/* Demand & Utilization */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-800 mb-3">Demand & Utilization</h3>
-                <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Demand & Utilization</h3>
+                <div className="space-y-3">
                   {/* Utilization */}
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-sm font-medium text-gray-700">Utilization</label>
-                      <span className="text-sm font-semibold text-blue-600">{inputs.utilizationPercent}%</span>
-                    </div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Utilization</label>
+                    <div className="text-xs text-gray-500 mb-2">{inputs.utilizationPercent}%</div>
                     <input
                       type="range"
                       min="10"
@@ -341,10 +342,8 @@ const App: React.FC = () => {
 
                   {/* Deadhead */}
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-sm font-medium text-gray-700">Deadhead</label>
-                      <span className="text-sm font-semibold text-blue-600">{inputs.deadheadPercent}%</span>
-                    </div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Deadhead</label>
+                    <div className="text-xs text-gray-500 mb-2">{inputs.deadheadPercent}%</div>
                     <input
                       type="range"
                       min="10"
@@ -361,10 +360,8 @@ const App: React.FC = () => {
 
                   {/* Ops Hours per Day */}
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-sm font-medium text-gray-700">Ops Hours / Day</label>
-                      <span className="text-sm font-semibold text-blue-600">{inputs.opsHoursPerDay}h</span>
-                    </div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Ops Hours / Day</label>
+                    <div className="text-xs text-gray-500 mb-2">{inputs.opsHoursPerDay}h</div>
                     <input
                       type="range"
                       min="8"
@@ -381,16 +378,14 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* Cost Structure */}
+              {/* Cost Structure (CapEx + OpEx) */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-800 mb-3">Cost Structure</h3>
-                <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Cost Structure (CapEx + OpEx)</h3>
+                <div className="space-y-3">
                   {/* Vehicle Cost */}
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-sm font-medium text-gray-700">Vehicle Cost</label>
-                      <span className="text-sm font-semibold text-blue-600">${(inputs.vehicleCost / 1000).toFixed(0)}k</span>
-                    </div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Vehicle Cost</label>
+                    <div className="text-xs text-gray-500 mb-2">${(inputs.vehicleCost / 1000).toFixed(0)}k</div>
                     <input
                       type="range"
                       min="50000"
@@ -407,10 +402,8 @@ const App: React.FC = () => {
 
                   {/* Vehicles per Operator */}
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-sm font-medium text-gray-700">Vehicles per Operator</label>
-                      <span className="text-sm font-semibold text-blue-600">{inputs.vehiclesPerOperator}</span>
-                    </div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Vehicles per Operator</label>
+                    <div className="text-xs text-gray-500 mb-2">{inputs.vehiclesPerOperator}</div>
                     <input
                       type="range"
                       min="2"
@@ -427,10 +420,8 @@ const App: React.FC = () => {
 
                   {/* Variable Cost per Mile */}
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-sm font-medium text-gray-700">Variable Cost / Mile</label>
-                      <span className="text-sm font-semibold text-blue-600">${inputs.variableCostPerMile.toFixed(2)}</span>
-                    </div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Variable Cost / Mile</label>
+                    <div className="text-xs text-gray-500 mb-2">${inputs.variableCostPerMile.toFixed(2)}</div>
                     <input
                       type="range"
                       min="0.20"
@@ -444,13 +435,17 @@ const App: React.FC = () => {
                       }}
                     />
                   </div>
+                </div>
+              </div>
 
+              {/* Pricing */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">Pricing</h3>
+                <div className="space-y-3">
                   {/* Revenue per Mile */}
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-sm font-medium text-gray-700">Revenue / Mile</label>
-                      <span className="text-sm font-semibold text-blue-600">${inputs.revenuePerMile.toFixed(2)}</span>
-                    </div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Revenue / Mile</label>
+                    <div className="text-xs text-gray-500 mb-2">${inputs.revenuePerMile.toFixed(2)}</div>
                     <input
                       type="range"
                       min="1.00"
@@ -465,22 +460,6 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
-              </div>
-
-              {/* X Axis Variable Dropdown */}
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  X-Axis Variable
-                </label>
-                <select
-                  value={xAxisVariable}
-                  onChange={(e) => setXAxisVariable(e.target.value as XAxisVariable)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                >
-                  <option value="utilization">Utilization (%)</option>
-                  <option value="deadhead">Deadhead (%)</option>
-                  <option value="vehiclesPerOperator">Vehicles per Operator</option>
-                </select>
               </div>
             </div>
           </div>
@@ -527,6 +506,18 @@ const App: React.FC = () => {
 
             {/* Chart */}
             <div className="flex-1 min-h-0">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold text-gray-800">Cost Analysis</h3>
+                <select
+                  value={xAxisVariable}
+                  onChange={(e) => setXAxisVariable(e.target.value as XAxisVariable)}
+                  className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="utilization">Utilization (%)</option>
+                  <option value="deadhead">Deadhead (%)</option>
+                  <option value="vehiclesPerOperator">Vehicles per Operator</option>
+                </select>
+              </div>
               <div className="h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
