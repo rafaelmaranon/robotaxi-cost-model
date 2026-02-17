@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
+import { ChatPanel } from './components/ChatPanel'
 
 interface SimulationInputs {
   fleetSize: number
@@ -431,6 +432,24 @@ const App: React.FC = () => {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+
+            {/* Chat Panel */}
+            <div>
+              <ChatPanel simState={{
+                fleetSize: inputs.fleetSize,
+                vehiclesPerOperator: inputs.vehiclesPerOperator,
+                vehicleCost: inputs.vehicleCost,
+                opsHoursPerDay: inputs.opsHoursPerDay,
+                deadheadPercent: inputs.deadheadPercent,
+                variableCostPerMile: inputs.variableCostPerMile,
+                revenuePerMile: inputs.revenuePerMile,
+                utilizationPercent: inputs.utilizationPercent,
+                totalCostPerMile: currentMetrics.totalCostPerMile,
+                marginPerMile: currentMetrics.marginPerMile,
+                status: currentMetrics.marginPerMile < 0 ? 'Losing' : 
+                        currentMetrics.marginPerMile <= 0.25 ? 'Break-even' : 'Profitable'
+              }} />
             </div>
           </div>
         </div>
