@@ -465,7 +465,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Right Panel - KPIs and Chart */}
-          <div className="lg:col-span-2 flex flex-col space-y-4 overflow-hidden">
+          <div className="lg:col-span-2 flex flex-col h-full overflow-hidden">
             {/* KPIs */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6">
@@ -608,7 +608,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Chat UI */}
-            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col h-64">
+            <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col h-64 shrink-0">
               <h3 className="text-lg font-semibold text-gray-800 mb-3">Insights</h3>
               
               <div className="flex flex-wrap gap-2 mb-3">
@@ -657,7 +657,7 @@ const App: React.FC = () => {
               </div>
 
               {aiReply && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex-1 overflow-y-auto">
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex-1 overflow-y-auto max-h-[220px]">
                   <div className="text-sm whitespace-pre-wrap">{aiReply}</div>
                 </div>
               )}
