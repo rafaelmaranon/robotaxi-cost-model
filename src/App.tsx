@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
-import { ChatPanel } from './components/ChatPanel'
 
 interface SimulationInputs {
   fleetSize: number
@@ -28,6 +27,9 @@ const App: React.FC = () => {
   })
 
   const [xAxisVariable, setXAxisVariable] = useState<XAxisVariable>('utilization')
+  const [userMessage, setUserMessage] = useState('')
+  const [aiReply, setAiReply] = useState('')
+  const [loading, setLoading] = useState(false)
 
   // Constants
   const operatorCostPerHour = 40
@@ -125,6 +127,52 @@ const App: React.FC = () => {
         return 'Deadhead (%)'
       case 'vehiclesPerOperator':
         return 'Vehicles per Operator'
+    }
+  }
+
+  const handleAskAI = async () => {
+    if (!userMessage.trim()) return
+    
+    setLoading(true)
+    setAiReply('')
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: 'demo',
+          userMessage,
+          simState: {
+            fleetSize: inputs.fleetSize,
+            vehiclesPerOperator: inputs.vehiclesPerOperator,
+            vehicleCost: inputs.vehicleCost,
+            opsHoursPerDay: inputs.opsHoursPerDay,
+            deadheadPercent: inputs.deadheadPercent,
+            variableCostPerMile: inputs.variableCostPerMile,
+            revenuePerMile: inputs.revenuePerMile,
+            utilizationPercent: inputs.utilizationPercent,
+            totalCostPerMile: currentMetrics.totalCostPerMile,
+            marginPerMile: currentMetrics.marginPerMile,
+            status: currentMetrics.marginPerMile < 0 ? 'Losing' : 
+                    currentMetrics.marginPerMile <= 0.25 ? 'Break-even' : 'Profitable'
+          }
+        }),
+      })
+
+      const data = await response.json()
+      
+      if (response.ok) {
+        setAiReply(data.reply)
+      } else {
+        setAiReply(`Error: ${data.error}`)
+      }
+    } catch (error) {
+      setAiReply('Network error occurred')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -434,22 +482,33 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Chat Panel */}
-            <div>
-              <ChatPanel simState={{
-                fleetSize: inputs.fleetSize,
-                vehiclesPerOperator: inputs.vehiclesPerOperator,
-                vehicleCost: inputs.vehicleCost,
-                opsHoursPerDay: inputs.opsHoursPerDay,
-                deadheadPercent: inputs.deadheadPercent,
-                variableCostPerMile: inputs.variableCostPerMile,
-                revenuePerMile: inputs.revenuePerMile,
-                utilizationPercent: inputs.utilizationPercent,
-                totalCostPerMile: currentMetrics.totalCostPerMile,
-                marginPerMile: currentMetrics.marginPerMile,
-                status: currentMetrics.marginPerMile < 0 ? 'Losing' : 
-                        currentMetrics.marginPerMile <= 0.25 ? 'Break-even' : 'Profitable'
-              }} />
+            {/* Chat UI */}
+            <div className="bg-white rounded-lg shadow-lg p-4 space-y-4">
+              <h3 className="text-lg font-semibold text-gray-800">Ask AI</h3>
+              
+              <div className="space-y-2">
+                <textarea
+                  value={userMessage}
+                  onChange={(e) => setUserMessage(e.target.value)}
+                  placeholder="Ask about your robotaxi economics..."
+                  className="w-full p-2 border border-gray-300 rounded-md resize-none h-20"
+                  disabled={loading}
+                />
+                
+                <button
+                  onClick={handleAskAI}
+                  disabled={loading || !userMessage.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Asking...' : 'Ask AI'}
+                </button>
+              </div>
+
+              {aiReply && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="text-sm whitespace-pre-wrap">{aiReply}</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
