@@ -180,9 +180,15 @@ Maximum 3. Each must include:
 🎯 Recommended next action
 Single decisive step.
 
-5️⃣ Extreme Parameter Detection
-If vehiclesPerOperator > 20 OR deadheadPercent > 50 OR breakEvenUtilization > 75:
+5️⃣ State Classification & Warnings
+Mandatory classification:
+If margin < 0:
+State explicitly: "This configuration is not sustainable."
 
+If breakEvenUtilization > 75:
+State explicitly: "Model is structurally stressed."
+
+Operational realism warning (only when marginPerMile > 0 AND (vehiclesPerOperator > 20 OR deadheadPercent > 50)):
 ⚠️ Operational realism warning:
 This configuration may be financially profitable in the model but operationally unrealistic in real deployments.
 
@@ -201,8 +207,9 @@ Before finalizing the answer:
 - Verify lever ranking matches impact logic.
 - If inconsistency is detected, silently correct it.
 
-Never mention this validation step in the response.
-Never output meta-comments or internal checks.`
+CRITICAL: Never mention this validation step in the response.
+Never output meta-comments or internal checks.
+Never include phrases like "Before responding" or "Does this advice" in your output.`
         },
         {
           role: "user",
