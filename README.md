@@ -4,7 +4,7 @@ Independent unit economics simulator for robotaxi fleets (Waymo / Zoox / Tesla s
 
 **Version 1.0.0** - A React + TypeScript + Tailwind + Recharts single-page application for simulating robotaxi unit economics and analyzing cost structures.
 
-🌐 **Live Demo**: https://rafaelmaranon.github.io/Waymo-cost-model/
+🌐 **Live Demo**: https://robotaxi-cost-model.vercel.app/
 
 ## Features
 
@@ -35,8 +35,8 @@ Independent unit economics simulator for robotaxi fleets (Waymo / Zoox / Tesla s
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/rafaelmaranon/Waymo-cost-model.git
-cd Waymo-cost-model
+git clone https://github.com/rafaelmaranon/robotaxi-cost-model.git
+cd robotaxi-cost-model
 ```
 
 2. Install dependencies:
