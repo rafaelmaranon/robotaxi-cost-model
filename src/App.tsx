@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 
 interface SimulationInputs {
@@ -64,15 +64,38 @@ const App: React.FC = () => {
   const [aiReply, setAiReply] = useState('')
   const [loading, setLoading] = useState(false)
   const [showDisclaimer, setShowDisclaimer] = useState(false)
+  
+  // Track page view on component mount
+  useEffect(() => {
+    trackEvent('page_view', { 
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent 
+    })
+  }, [])
+
   const [sessionId] = useState(() => {
-    // Generate unique sessionId per browser session
-    const stored = localStorage.getItem('robotaxi-session-id')
-    if (stored) return stored
-    
-    const newId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36)
-    localStorage.setItem('robotaxi-session-id', newId)
-    return newId
+    // Generate persistent anonymous user ID
+    let sessionId = localStorage.getItem('session_id')
+    if (!sessionId) {
+      sessionId = crypto.randomUUID()
+      localStorage.setItem('session_id', sessionId)
+    }
+    return sessionId
   })
+
+  // Analytics helper
+  const trackEvent = async (event: string, payload?: any) => {
+    try {
+      await fetch('/api/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, event, payload })
+      })
+    } catch (error) {
+      // Silently fail analytics - don't break user experience
+      console.warn('Analytics tracking failed:', error)
+    }
+  }
 
   // Constants
   const operatorCostPerHour = 40
@@ -185,11 +208,20 @@ const App: React.FC = () => {
 
   const handleInputChange = (field: keyof SimulationInputs, value: number) => {
     setInputs(prev => ({ ...prev, [field]: value }))
+    
+    // Track parameter changes (debounced)
+    trackEvent('param_change', { 
+      field, 
+      value, 
+      utilization: field === 'utilizationPercent' ? value : inputs.utilizationPercent,
+      deadhead: field === 'deadheadPercent' ? value : inputs.deadheadPercent 
+    })
   }
 
   const handlePresetSelect = (presetName: string) => {
     if (presetName && PRESETS[presetName as keyof typeof PRESETS]) {
       setInputs(PRESETS[presetName as keyof typeof PRESETS])
+      trackEvent('preset_selected', { preset: presetName })
     }
   }
 
@@ -211,8 +243,32 @@ const App: React.FC = () => {
   const handleAskAI = async () => {
     if (!userMessage.trim()) return
     
+    const startTime = Date.now()
     setLoading(true)
     setAiReply('')
+
+    // Track AI question
+    trackEvent('ai_question', { question: userMessage })
+
+    // Compute fresh simState inline to avoid stale closures
+    const freshMetrics = calculateMetrics(inputs)
+    const freshBreakEven = breakEvenUtilizationPercent
+    
+    const simState = {
+      fleetSize: inputs.fleetSize,
+      utilizationPercent: inputs.utilizationPercent,
+      deadheadPercent: inputs.deadheadPercent,
+      opsHoursPerDay: inputs.opsHoursPerDay,
+      vehicleCost: inputs.vehicleCost,
+      vehiclesPerOperator: inputs.vehiclesPerOperator,
+      variableCostPerMile: inputs.variableCostPerMile,
+      revenuePerMile: inputs.revenuePerMile,
+      totalCostPerMile: freshMetrics.totalCostPerMile,
+      marginPerMile: freshMetrics.marginPerMile,
+      breakEvenUtilization: freshBreakEven,
+      status: freshMetrics.marginPerMile < 0 ? 'Losing' : 
+              freshMetrics.marginPerMile <= 0.25 ? 'Break-even' : 'Profitable'
+    }
 
     try {
       const response = await fetch('/api/chat', {
@@ -223,21 +279,7 @@ const App: React.FC = () => {
         body: JSON.stringify({
           sessionId: sessionId,
           userMessage,
-          simState: {
-            fleetSize: inputs.fleetSize,
-            vehiclesPerOperator: inputs.vehiclesPerOperator,
-            vehicleCost: inputs.vehicleCost,
-            opsHoursPerDay: inputs.opsHoursPerDay,
-            deadheadPercent: inputs.deadheadPercent,
-            variableCostPerMile: inputs.variableCostPerMile,
-            revenuePerMile: inputs.revenuePerMile,
-            utilizationPercent: inputs.utilizationPercent,
-            totalCostPerMile: currentMetrics.totalCostPerMile,
-            marginPerMile: currentMetrics.marginPerMile,
-            breakEvenUtilizationPercent: breakEvenUtilizationPercent,
-            status: currentMetrics.marginPerMile < 0 ? 'Losing' : 
-                    currentMetrics.marginPerMile <= 0.25 ? 'Break-even' : 'Profitable'
-          }
+          simState
         }),
       })
 
@@ -267,74 +309,29 @@ const App: React.FC = () => {
             hasShownLoading = true
           }
           
-          // Try to parse and format only when we have complete JSON
-          if (fullResponse.includes('}')) {
-            try {
-              const structuredData = JSON.parse(fullResponse)
-              if (structuredData.headline && structuredData.insights) {
-                setAiReply(renderStructuredResponse(structuredData))
-                break // Stop updating once we have formatted response
-              }
-            } catch {
-              // Continue streaming until we get valid JSON
-            }
+          // Show streaming markdown content directly (no JSON parsing needed)
+          if (fullResponse.trim().length > 10) {
+            setAiReply(fullResponse)
           }
         }
       }
 
-      // Final parse attempt if not already formatted
-      if (!fullResponse.includes('🎯')) {
-        try {
-          const structuredData = JSON.parse(fullResponse)
-          if (structuredData.headline && structuredData.insights) {
-            setAiReply(renderStructuredResponse(structuredData))
-          } else {
-            setAiReply(fullResponse) // Fallback to raw text
-          }
-        } catch {
-          setAiReply(fullResponse) // Fallback to raw text
-        }
+      // No final parsing needed - markdown comes directly from AI
+      if (fullResponse.trim()) {
+        setAiReply(fullResponse)
       }
 
     } catch (error) {
       setAiReply('Network error occurred')
     } finally {
       setLoading(false)
+      
+      // Track AI response completion
+      const latencyMs = Date.now() - startTime
+      trackEvent('ai_response', { latency_ms: latencyMs })
     }
   }
 
-  const renderStructuredResponse = (data: any) => {
-    let formatted = `🎯 ${data.headline}\n\n`
-    
-    if (data.insights?.length) {
-      formatted += '💡 KEY INSIGHTS:\n'
-      data.insights.forEach((insight: string) => {
-        formatted += `  • ${insight}\n`
-      })
-      formatted += '\n'
-    }
-    
-    if (data.top_levers?.length) {
-      formatted += '🔧 TOP LEVERS:\n'
-      data.top_levers.forEach((lever: any) => {
-        formatted += `  • ${lever.lever} (${lever.direction}): ${lever.why}\n`
-      })
-      formatted += '\n'
-    }
-    
-    if (data.recommended_next_change) {
-      formatted += `🎯 NEXT STEP:\n  ${data.recommended_next_change}\n\n`
-    }
-    
-    if (data.sanity_checks?.length) {
-      formatted += '⚠️ SANITY CHECKS:\n'
-      data.sanity_checks.forEach((check: string) => {
-        formatted += `  • ${check}\n`
-      })
-    }
-    
-    return formatted
-  }
 
 
   return (

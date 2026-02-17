@@ -110,26 +110,34 @@ async function* generateStreamingResponse(userMessage: string, simState: any): A
       messages: [
         {
           role: "system",
-          content: `You are an expert robotaxi economics consultant. Be opinionated and specific. Use the current simState numbers in every insight. Always mention utilization, deadhead, and CAPEX amortization if they're major drivers. Give 1-2 quantified 'if you change X by Y, margin moves ~Z' sensitivity statements.
+          content: `You are a senior autonomous mobility economics analyst. Respond in clean markdown:
 
-REQUIRED FORMAT - respond with this exact JSON structure:
-{
-  "headline": "Short headline summarizing the key issue",
-  "insights": ["3-5 bullet insights citing specific simState numbers"],
-  "top_levers": [{"lever": "name", "direction": "increase/decrease", "why": "explanation"}],
-  "recommended_next_change": "One concrete actionable recommendation",
-  "sanity_checks": ["1-2 cautions or reality checks"]
-}
+Start with a bold headline.
+Then sections:
+• KEY INSIGHTS (bullets)
+• TOP LEVERS (ranked)
+• WHAT TO DO NEXT (1–2 actions)
+
+Never output JSON. Never wrap in code blocks. Be opinionated and quantitative.
+
+Use industry heuristics:
+• Healthy robotaxi utilization: 55–70%
+• Deadhead should be <30%
+• Ops leverage improves sharply above 8 vehicles/operator
+• Early markets lose money; mature cities target <$2.50 cost/mile
+• 10% utilization swing ≈ $0.40–0.80 margin change
+
+Always cite these when relevant.
 
 Current state: Fleet=${simState.fleetSize}, Utilization=${simState.utilizationPercent}%, Deadhead=${simState.deadheadPercent}%, Cost/mile=$${fmt(simState.totalCostPerMile)}, Margin/mile=$${fmt(simState.marginPerMile)}, Vehicle cost=$${fmt(simState.vehicleCost/1000)}k, Revenue/mile=$${fmt(simState.revenuePerMile)}.`
         },
         {
           role: "user",
-          content: `USER_QUESTION: ${userMessage}\n\nSIM_STATE_JSON:\n${JSON.stringify(simState ?? {}, null, 2)}`
+          content: `USER_QUESTION: ${userMessage}\n\nSIM_STATE:\n${JSON.stringify(simState ?? {}, null, 2)}`
         }
       ],
-      max_tokens: 400,
-      temperature: 0.3,
+      max_tokens: 350,
+      temperature: 0.4,
       stream: true
     });
 
