@@ -74,13 +74,19 @@ const App: React.FC = () => {
   }, [])
 
   const [sessionId] = useState(() => {
-    // Generate persistent anonymous user ID
-    let sessionId = localStorage.getItem('session_id')
-    if (!sessionId) {
-      sessionId = crypto.randomUUID()
-      localStorage.setItem('session_id', sessionId)
-    }
-    return sessionId
+    const stored = localStorage.getItem('robotaxi-session-id')
+    if (stored) return stored
+    const newId = crypto.randomUUID()
+    localStorage.setItem('robotaxi-session-id', newId)
+    return newId
+  })
+
+  const [anonUserId] = useState(() => {
+    const stored = localStorage.getItem('robotaxi-anon-user-id')
+    if (stored) return stored
+    const newId = crypto.randomUUID()
+    localStorage.setItem('robotaxi-anon-user-id', newId)
+    return newId
   })
 
   // Analytics helper
@@ -89,7 +95,7 @@ const App: React.FC = () => {
       await fetch('/api/analytics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, event, payload })
+        body: JSON.stringify({ sessionId, event, anonUserId, payload })
       })
     } catch (error) {
       // Silently fail analytics - don't break user experience

@@ -13,6 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 interface AnalyticsEvent {
   sessionId: string;
   event: string;
+  anonUserId?: string;
   payload?: any;
 }
 
@@ -35,30 +36,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
     console.log('SUPABASE_SERVICE_ROLE_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
     
-    const { sessionId, event, payload }: AnalyticsEvent = req.body;
+    const { sessionId, event, anonUserId, payload }: AnalyticsEvent = req.body;
 
     if (!sessionId || !event) {
       return res.status(400).json({ error: 'Missing required fields: sessionId, event' });
     }
 
-    // Log analytics event with detailed error handling
+    // Derive anon_user_id with fallback logic
+    const derivedAnonUserId = anonUserId || sessionId || crypto.randomUUID();
+
+    // Log analytics event with schema-aligned insert
     const { error } = await supabase
       .from('analytics_events')
       .insert({
         session_id: sessionId,
-        event: event,
-        payload: payload || {}
+        anon_user_id: derivedAnonUserId,
+        event_name: event
       });
 
     if (error) {
       console.error('Supabase insert error:', error);
-      return res.status(500).json({ error });
+      return res.status(500).json({ error: error?.message || 'insert_failed' });
     }
 
     return res.status(200).json({ ok: true });
 
   } catch (err: any) {
     console.error('Analytics route crash:', err);
-    return res.status(500).json({ crash: String(err) });
+    return res.status(500).json({ error: 'server_error' });
   }
 }
