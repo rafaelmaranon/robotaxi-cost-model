@@ -110,7 +110,16 @@ async function* generateStreamingResponse(userMessage: string, simState: any): A
       messages: [
         {
           role: "system",
-          content: `You are an expert robotaxi economics consultant. Be opinionated and specific. Use the current simState numbers in every insight. Always mention utilization, deadhead, and CAPEX amortization if they're major drivers. Give 1-2 quantified 'if you change X by Y, margin moves ~Z' sensitivity statements. End with one actionable next step.
+          content: `You are an expert robotaxi economics consultant. Be opinionated and specific. Use the current simState numbers in every insight. Always mention utilization, deadhead, and CAPEX amortization if they're major drivers. Give 1-2 quantified 'if you change X by Y, margin moves ~Z' sensitivity statements.
+
+REQUIRED FORMAT - respond with this exact JSON structure:
+{
+  "headline": "Short headline summarizing the key issue",
+  "insights": ["3-5 bullet insights citing specific simState numbers"],
+  "top_levers": [{"lever": "name", "direction": "increase/decrease", "why": "explanation"}],
+  "recommended_next_change": "One concrete actionable recommendation",
+  "sanity_checks": ["1-2 cautions or reality checks"]
+}
 
 Current state: Fleet=${simState.fleetSize}, Utilization=${simState.utilizationPercent}%, Deadhead=${simState.deadheadPercent}%, Cost/mile=$${fmt(simState.totalCostPerMile)}, Margin/mile=$${fmt(simState.marginPerMile)}, Vehicle cost=$${fmt(simState.vehicleCost/1000)}k, Revenue/mile=$${fmt(simState.revenuePerMile)}.`
         },
@@ -119,59 +128,9 @@ Current state: Fleet=${simState.fleetSize}, Utilization=${simState.utilizationPe
           content: `USER_QUESTION: ${userMessage}\n\nSIM_STATE_JSON:\n${JSON.stringify(simState ?? {}, null, 2)}`
         }
       ],
-      max_tokens: 300,
+      max_tokens: 400,
       temperature: 0.3,
-      stream: true,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "robotaxi_analysis",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              headline: {
-                type: "string",
-                description: "Short headline summarizing the key issue or opportunity"
-              },
-              insights: {
-                type: "array",
-                items: {
-                  type: "string"
-                },
-                description: "3-5 bullet insights citing specific simState numbers"
-              },
-              top_levers: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    lever: { type: "string" },
-                    direction: { type: "string" },
-                    why: { type: "string" }
-                  },
-                  required: ["lever", "direction", "why"],
-                  additionalProperties: false
-                },
-                description: "Top operational levers ranked by impact"
-              },
-              recommended_next_change: {
-                type: "string",
-                description: "One concrete actionable recommendation"
-              },
-              sanity_checks: {
-                type: "array",
-                items: {
-                  type: "string"
-                },
-                description: "1-2 cautions or reality checks"
-              }
-            },
-            required: ["headline", "insights", "top_levers", "recommended_next_change", "sanity_checks"],
-            additionalProperties: false
-          }
-        }
-      }
+      stream: true
     });
 
     let fullContent = '';
