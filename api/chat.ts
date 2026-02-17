@@ -92,32 +92,23 @@ const fmt = (v: any, digits = 2) =>
 
 // Generate OpenAI response
 async function generateResponse(userMessage: string, simState: any): Promise<string> {
-  const systemPrompt = `You are an AI assistant helping users analyze robotaxi unit economics. 
-
-Current simulation state:
-- Fleet Size: ${simState?.fleetSize?.toLocaleString() ?? 'n/a'} vehicles
-- Utilization: ${simState?.utilizationPercent ?? 'n/a'}%
-- Vehicles per Operator: ${simState?.vehiclesPerOperator ?? 'n/a'}
-- Vehicle Cost: $${simState?.vehicleCost?.toLocaleString() ?? 'n/a'}
-- Ops Hours/Day: ${simState?.opsHoursPerDay ?? 'n/a'}h
-- Deadhead: ${simState?.deadheadPercent ?? 'n/a'}%
-- Variable Cost/Mile: $${fmt(simState?.variableCostPerMile)}
-- Revenue/Mile: $${fmt(simState?.revenuePerMile)}
-- Total Cost/Mile: $${fmt(simState?.totalCostPerMile)}
-- Margin/Mile: $${fmt(simState?.marginPerMile)}
-- Status: ${simState?.status ?? 'n/a'}
-
-Answer questions about this simulation state. Provide insights about the economics, suggest optimizations, explain relationships between parameters, or analyze profitability. Keep responses concise and focused on the current simulation parameters.`;
-
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage }
+        {
+          role: "system",
+          content:
+            "You are an assistant embedded in a robotaxi unit economics simulator. You MUST use ONLY the provided simState JSON. If a value is missing, say 'missing' and do not guess. Respond in 3-6 bullet points, each bullet must cite at least one simState field name (e.g., utilizationPercent, deadheadPercent). Keep it concise."
+        },
+        {
+          role: "user",
+          content:
+            `USER_QUESTION: ${userMessage}\n\nSIM_STATE_JSON:\n${JSON.stringify(simState ?? {}, null, 2)}` 
+        }
       ],
-      max_tokens: 300,
-      temperature: 0.7,
+      max_tokens: 220,
+      temperature: 0.2,
     });
 
     return completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response. Please try again.';
