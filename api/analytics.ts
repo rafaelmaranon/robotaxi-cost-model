@@ -51,12 +51,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .insert({
         session_id: sessionId,
         anon_user_id: derivedAnonUserId,
-        event_name: event
+        event_name: event,
+        payload: payload || {}
       });
 
     if (error) {
       console.error('Supabase insert error:', error);
-      return res.status(500).json({ error: error?.message || 'insert_failed' });
+      return res.status(500).json({ error: error.message });
     }
 
     return res.status(200).json({ ok: true });
