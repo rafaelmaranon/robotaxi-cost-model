@@ -94,7 +94,7 @@ const fmt = (v: any, digits = 2) =>
 async function generateResponse(userMessage: string, simState: any): Promise<string> {
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini',
       messages: [
         {
           role: "system",
@@ -126,6 +126,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const { sessionId, userMessage, simState = {} }: ChatRequest = req.body;
+
+    const requiredFields = [
+      "utilizationPercent",
+      "deadheadPercent",
+      "vehicleCost",
+      "vehiclesPerOperator",
+      "opsHoursPerDay",
+      "variableCostPerMile",
+      "revenuePerMile",
+    ];
+
+    const missingFields = requiredFields.filter((k) => simState?.[k] === undefined || simState?.[k] === null);
+
+    if (missingFields.length > 0) {
+      const reply = `missing: ${missingFields.join(", ")}`;
+      // still log the event if you want; but DO NOT call OpenAI
+      try {
+        const { error: insertError } = await supabase.from("chat_events").insert({
+          session_id: sessionId ?? "missing",
+          user_message: userMessage ?? "",
+          assistant_message: reply,
+          sim_state: simState ?? {},
+        });
+        if (insertError) console.error("supabase insert", insertError);
+      } catch (e) {
+        console.error("supabase insert", e);
+      }
+      return res.status(200).json({ reply });
+    }
 
     // Validate required fields
     if (!sessionId || !userMessage || !simState) {
