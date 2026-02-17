@@ -1,4 +1,6 @@
-# Robotaxi Unit Economics Simulator
+# Robotaxi Cost Model
+
+Independent unit economics simulator for robotaxi fleets (Waymo / Zoox / Tesla style models using public assumptions).
 
 **Version 1.0.0** - A React + TypeScript + Tailwind + Recharts single-page application for simulating robotaxi unit economics and analyzing cost structures.
 
