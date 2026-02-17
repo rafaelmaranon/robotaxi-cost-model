@@ -99,7 +99,7 @@ async function generateResponse(userMessage: string, simState: any): Promise<str
         {
           role: "system",
           content:
-            "You are an assistant embedded in a robotaxi unit economics simulator. You MUST use ONLY the provided simState JSON. If a value is missing, say 'missing' and do not guess. Respond in 3-6 bullet points, each bullet must cite at least one simState field name (e.g., utilizationPercent, deadheadPercent). Keep it concise."
+            "You are an assistant embedded in a robotaxi unit economics simulator. You MUST use ONLY the provided simState JSON. If a required value is missing, you MUST output exactly: 'missing: <field1>, <field2>, ...' and STOP (do not give generic advice). Otherwise respond in 3-6 bullet points, each bullet must cite at least one simState field name (e.g., utilizationPercent, deadheadPercent). Keep it concise."
         },
         {
           role: "user",
