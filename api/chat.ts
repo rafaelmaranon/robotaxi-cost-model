@@ -61,7 +61,7 @@ async function checkRateLimit(sessionId: string): Promise<boolean> {
     return false;
   }
 
-  return (data?.length || 0) < 2;
+  return (data?.length || 0) < 30;
 }
 
 // Log chat event to Supabase
