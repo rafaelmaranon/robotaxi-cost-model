@@ -80,22 +80,26 @@ async function logChatEvent(
   }
 }
 
+// Safe formatting helper
+const fmt = (v: any, digits = 2) =>
+  typeof v === "number" && Number.isFinite(v) ? v.toFixed(digits) : "n/a";
+
 // Generate OpenAI response
 async function generateResponse(userMessage: string, simState: any): Promise<string> {
   const systemPrompt = `You are an AI assistant helping users analyze robotaxi unit economics. 
 
 Current simulation state:
-- Fleet Size: ${simState.fleetSize.toLocaleString()} vehicles
-- Utilization: ${simState.utilizationPercent}%
-- Vehicles per Operator: ${simState.vehiclesPerOperator}
-- Vehicle Cost: $${simState.vehicleCost.toLocaleString()}
-- Ops Hours/Day: ${simState.opsHoursPerDay}h
-- Deadhead: ${simState.deadheadPercent}%
-- Variable Cost/Mile: $${simState.variableCostPerMile.toFixed(2)}
-- Revenue/Mile: $${simState.revenuePerMile.toFixed(2)}
-- Total Cost/Mile: $${simState.totalCostPerMile.toFixed(2)}
-- Margin/Mile: $${simState.marginPerMile.toFixed(2)}
-- Status: ${simState.status}
+- Fleet Size: ${simState?.fleetSize?.toLocaleString() ?? 'n/a'} vehicles
+- Utilization: ${simState?.utilizationPercent ?? 'n/a'}%
+- Vehicles per Operator: ${simState?.vehiclesPerOperator ?? 'n/a'}
+- Vehicle Cost: $${simState?.vehicleCost?.toLocaleString() ?? 'n/a'}
+- Ops Hours/Day: ${simState?.opsHoursPerDay ?? 'n/a'}h
+- Deadhead: ${simState?.deadheadPercent ?? 'n/a'}%
+- Variable Cost/Mile: $${fmt(simState?.variableCostPerMile)}
+- Revenue/Mile: $${fmt(simState?.revenuePerMile)}
+- Total Cost/Mile: $${fmt(simState?.totalCostPerMile)}
+- Margin/Mile: $${fmt(simState?.marginPerMile)}
+- Status: ${simState?.status ?? 'n/a'}
 
 Answer questions about this simulation state. Provide insights about the economics, suggest optimizations, explain relationships between parameters, or analyze profitability. Keep responses concise and focused on the current simulation parameters.`;
 
@@ -124,7 +128,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { sessionId, userMessage, simState }: ChatRequest = req.body;
+    const { sessionId, userMessage, simState = {} }: ChatRequest = req.body;
 
     // Validate required fields
     if (!sessionId || !userMessage || !simState) {
