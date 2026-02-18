@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
+import { Analytics } from '@vercel/analytics/react'
 
 interface SimulationInputs {
   fleetSize: number
@@ -777,6 +778,7 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
+        <Analytics />
       </div>
     </div>
   )
