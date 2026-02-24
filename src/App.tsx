@@ -74,19 +74,13 @@ const App: React.FC = () => {
   }, [])
 
   const [sessionId] = useState(() => {
-    const stored = localStorage.getItem('robotaxi-session-id')
-    if (stored) return stored
-    const newId = crypto.randomUUID()
-    localStorage.setItem('robotaxi-session-id', newId)
-    return newId
-  })
-
-  const [anonUserId] = useState(() => {
-    const stored = localStorage.getItem('robotaxi-anon-user-id')
-    if (stored) return stored
-    const newId = crypto.randomUUID()
-    localStorage.setItem('robotaxi-anon-user-id', newId)
-    return newId
+    // Generate persistent anonymous user ID
+    let sessionId = localStorage.getItem('session_id')
+    if (!sessionId) {
+      sessionId = crypto.randomUUID()
+      localStorage.setItem('session_id', sessionId)
+    }
+    return sessionId
   })
 
   // Analytics helper
@@ -95,7 +89,7 @@ const App: React.FC = () => {
       await fetch('/api/analytics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, event, anonUserId, payload })
+        body: JSON.stringify({ sessionId, event, payload })
       })
     } catch (error) {
       // Silently fail analytics - don't break user experience
@@ -231,9 +225,6 @@ const App: React.FC = () => {
     }
   }
 
-  const handleReset = () => {
-    setInputs(PRESETS['Scaling city']) // Reset to default preset
-  }
 
   const getXAxisLabel = () => {
     switch (xAxisVariable) {
@@ -366,12 +357,19 @@ const App: React.FC = () => {
               ))}
             </select>
             
-            <button
-              onClick={handleReset}
-              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Reset
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="mr-2 rounded-full bg-gradient-to-r from-emerald-400 to-blue-500 px-2 py-0.5 text-xs font-semibold text-white">
+                NEW
+              </span>
+              <a
+                href="https://autonomy-scale-roi.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium hover:underline"
+              >
+                Autonomy Scale ROI →
+              </a>
+            </div>
             
             <button
               onClick={() => setShowDisclaimer(true)}
