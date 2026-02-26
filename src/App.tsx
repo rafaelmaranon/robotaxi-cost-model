@@ -39,14 +39,14 @@ const PRESETS = {
     vehicleLifetimeYears: 5,
   },
   'Mature city': {
-    fleetSize: 8000,
-    vehiclesPerOperator: 8,
-    vehicleCost: 150000,
+    fleetSize: 100000,
+    vehiclesPerOperator: 80,
+    vehicleCost: 50000,
     opsHoursPerDay: 22,
-    deadheadPercent: 25,
-    variableCostPerMile: 0.45,
+    deadheadPercent: 15,
+    variableCostPerMile: 0.15,
     revenuePerMile: 2.20,
-    utilizationPercent: 65,
+    utilizationPercent: 80,
     vehicleLifetimeYears: 5,
   }
 }
@@ -400,13 +400,13 @@ const App: React.FC = () => {
                     <input
                       type="range"
                       min="500"
-                      max="10000"
-                      step="100"
+                      max="6000000"
+                      step="500"
                       value={inputs.fleetSize}
                       onChange={(e) => handleInputChange('fleetSize', Number(e.target.value))}
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.fleetSize - 500) / (10000 - 500)) * 100}%, #e5e7eb ${((inputs.fleetSize - 500) / (10000 - 500)) * 100}%, #e5e7eb 100%)`
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.fleetSize - 500) / (6000000 - 500)) * 100}%, #e5e7eb ${((inputs.fleetSize - 500) / (6000000 - 500)) * 100}%, #e5e7eb 100%)`
                       }}
                     />
                   </div>
