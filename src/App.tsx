@@ -10,6 +10,7 @@ interface SimulationInputs {
   variableCostPerMile: number
   revenuePerMile: number
   utilizationPercent: number
+  vehicleLifetimeYears: number
 }
 
 type XAxisVariable = 'utilization' | 'deadhead' | 'vehiclesPerOperator'
@@ -24,6 +25,7 @@ const PRESETS = {
     variableCostPerMile: 0.80,
     revenuePerMile: 3.50,
     utilizationPercent: 25,
+    vehicleLifetimeYears: 5,
   },
   'Scaling city': {
     fleetSize: 2000,
@@ -34,6 +36,7 @@ const PRESETS = {
     variableCostPerMile: 0.60,
     revenuePerMile: 2.50,
     utilizationPercent: 40,
+    vehicleLifetimeYears: 5,
   },
   'Mature city': {
     fleetSize: 8000,
@@ -44,6 +47,7 @@ const PRESETS = {
     variableCostPerMile: 0.45,
     revenuePerMile: 2.20,
     utilizationPercent: 65,
+    vehicleLifetimeYears: 5,
   }
 }
 
@@ -57,6 +61,7 @@ const App: React.FC = () => {
     variableCostPerMile: 0.60,
     revenuePerMile: 2.50,
     utilizationPercent: 40,
+    vehicleLifetimeYears: 5,
   })
 
   const [xAxisVariable, setXAxisVariable] = useState<XAxisVariable>('utilization')
@@ -99,7 +104,7 @@ const App: React.FC = () => {
 
   // Constants
   const operatorCostPerHour = 40
-  const vehicleLifetimeDays = 1825
+  const vehicleLifetimeDays = inputs.vehicleLifetimeYears * 365
   const maxMilesPerDay = 300
 
   // Economic model calculations
@@ -171,7 +176,7 @@ const App: React.FC = () => {
         range = { min: 10, max: 70, step: 1.5 }
         break
       case 'vehiclesPerOperator':
-        range = { min: 2, max: 60, step: 1.5 }
+        range = { min: 2, max: 200, step: 5 }
         break
     }
     
@@ -257,6 +262,7 @@ const App: React.FC = () => {
       deadheadPercent: inputs.deadheadPercent,
       opsHoursPerDay: inputs.opsHoursPerDay,
       vehicleCost: inputs.vehicleCost,
+      vehicleLifetimeYears: inputs.vehicleLifetimeYears,
       vehiclesPerOperator: inputs.vehiclesPerOperator,
       variableCostPerMile: inputs.variableCostPerMile,
       revenuePerMile: inputs.revenuePerMile,
@@ -453,14 +459,14 @@ const App: React.FC = () => {
                     <div className="text-xs text-gray-500 mb-2">{inputs.opsHoursPerDay}h</div>
                     <input
                       type="range"
-                      min="8"
+                      min="4"
                       max="24"
                       step="1"
                       value={inputs.opsHoursPerDay}
                       onChange={(e) => handleInputChange('opsHoursPerDay', Number(e.target.value))}
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.opsHoursPerDay - 8) / (24 - 8)) * 100}%, #e5e7eb ${((inputs.opsHoursPerDay - 8) / (24 - 8)) * 100}%, #e5e7eb 100%)`
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.opsHoursPerDay - 4) / (24 - 4)) * 100}%, #e5e7eb ${((inputs.opsHoursPerDay - 4) / (24 - 4)) * 100}%, #e5e7eb 100%)`
                       }}
                     />
                   </div>
@@ -477,14 +483,32 @@ const App: React.FC = () => {
                     <div className="text-xs text-gray-500 mb-2">${(inputs.vehicleCost / 1000).toFixed(0)}k</div>
                     <input
                       type="range"
-                      min="50000"
+                      min="15000"
                       max="300000"
                       step="5000"
                       value={inputs.vehicleCost}
                       onChange={(e) => handleInputChange('vehicleCost', Number(e.target.value))}
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.vehicleCost - 50000) / (300000 - 50000)) * 100}%, #e5e7eb ${((inputs.vehicleCost - 50000) / (300000 - 50000)) * 100}%, #e5e7eb 100%)`
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.vehicleCost - 15000) / (300000 - 15000)) * 100}%, #e5e7eb ${((inputs.vehicleCost - 15000) / (300000 - 15000)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
+
+                  {/* Vehicle Lifetime */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Vehicle Lifetime</label>
+                    <div className="text-xs text-gray-500 mb-2">{inputs.vehicleLifetimeYears} yrs</div>
+                    <input
+                      type="range"
+                      min="3"
+                      max="10"
+                      step="1"
+                      value={inputs.vehicleLifetimeYears}
+                      onChange={(e) => handleInputChange('vehicleLifetimeYears', Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.vehicleLifetimeYears - 3) / (10 - 3)) * 100}%, #e5e7eb ${((inputs.vehicleLifetimeYears - 3) / (10 - 3)) * 100}%, #e5e7eb 100%)`
                       }}
                     />
                   </div>
@@ -496,13 +520,13 @@ const App: React.FC = () => {
                     <input
                       type="range"
                       min="2"
-                      max="60"
+                      max="200"
                       step="1"
                       value={inputs.vehiclesPerOperator}
                       onChange={(e) => handleInputChange('vehiclesPerOperator', Number(e.target.value))}
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.vehiclesPerOperator - 2) / (60 - 2)) * 100}%, #e5e7eb ${((inputs.vehiclesPerOperator - 2) / (60 - 2)) * 100}%, #e5e7eb 100%)`
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.vehiclesPerOperator - 2) / (200 - 2)) * 100}%, #e5e7eb ${((inputs.vehiclesPerOperator - 2) / (200 - 2)) * 100}%, #e5e7eb 100%)`
                       }}
                     />
                   </div>
@@ -513,14 +537,14 @@ const App: React.FC = () => {
                     <div className="text-xs text-gray-500 mb-2">${inputs.variableCostPerMile.toFixed(2)}</div>
                     <input
                       type="range"
-                      min="0.20"
+                      min="0.05"
                       max="2.00"
-                      step="0.05"
+                      step="0.01"
                       value={inputs.variableCostPerMile}
                       onChange={(e) => handleInputChange('variableCostPerMile', Number(e.target.value))}
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.variableCostPerMile - 0.20) / (2.00 - 0.20)) * 100}%, #e5e7eb ${((inputs.variableCostPerMile - 0.20) / (2.00 - 0.20)) * 100}%, #e5e7eb 100%)`
+                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((inputs.variableCostPerMile - 0.05) / (2.00 - 0.05)) * 100}%, #e5e7eb ${((inputs.variableCostPerMile - 0.05) / (2.00 - 0.05)) * 100}%, #e5e7eb 100%)`
                       }}
                     />
                   </div>
